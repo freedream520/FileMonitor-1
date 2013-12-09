@@ -1,0 +1,14 @@
+<properties>
+	<connection>
+		<user>micsie</user>
+		<password>micsie</password>
+		<host>piaseczno</host>
+	</connection>
+	<log configFile="conf/log4j.properties" />
+	<dir local="/some/local/dir" remote="/some/remote/dir">
+		<mask>^Item(.)+\.txt$</mask>
+	</dir>
+	<dir local="/another/local/dir" remote="/another/remote/dir">
+		<mask>^Demand(.)*\.txt$</mask>
+	</dir>
+</properties>
