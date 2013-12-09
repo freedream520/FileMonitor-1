@@ -1,14 +1,14 @@
-===============
-= FileMonitor =
-===============
+===========
+FileMonitor
+===========
 
-An application monitoring specified directories for files and transferring them to another host via FTP.
+An application monitoring specified directories for files and transferring them to another host via (s)FTP.
 
 
-===================
-= Immediate goals =
-===================
+=====
+To do
+=====
 
-* Sending files via SMTP
-* Listening on multiple directories
-* File masks
+* FTP transfer
+* Improving recursive watching (excluding directories)
+* Exclusive masks
