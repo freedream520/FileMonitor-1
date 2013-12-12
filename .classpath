@@ -9,5 +9,8 @@
 	<classpathentry kind="lib" path="lib/jsch-0.1.50.jar"/>
 	<classpathentry kind="lib" path="lib/dom4j-1.6.1.jar"/>
 	<classpathentry kind="lib" path="lib/jaxen-1.1.6.jar"/>
+	<classpathentry kind="lib" path="lib/activation-1.1.1.jar"/>
+	<classpathentry kind="lib" path="lib/mail-1.4.1.jar"/>
+	<classpathentry kind="lib" path="lib/apache-log4j-extras-1.2.17.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

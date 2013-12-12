@@ -1,4 +1,4 @@
-package com.syncron.ps.tools;
+package com.syncron.ps.tools.fileMonitoring;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -17,7 +17,12 @@ import static java.nio.file.LinkOption.*;
 import java.nio.file.attribute.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
- 
+
+/**
+ * 
+ * This class listens for new files in given directories.
+ *
+ */
 public class FileMonitor implements Runnable {
  
     private final WatchService watcher;
@@ -31,7 +36,7 @@ public class FileMonitor implements Runnable {
     private LinkedList<Path> backlog;
     
     private FileSender sender;
-    private Map<Path, MonitoredDirectory> mappings;
+    private Map<Path, MonitoredDirectory> directories;
  
 	static Logger logger = Logger.getLogger(FileMonitor.class.getName());
     
@@ -65,42 +70,50 @@ public class FileMonitor implements Runnable {
         });
     }
  
-    /**
-     * Creates a WatchService and registers the given directory
-     */
-    public FileMonitor(String strDir, boolean recursive) throws IOException {
-    	Path dir = Paths.get(strDir);
-        this.watcher = FileSystems.getDefault().newWatchService();
-        this.keys = new HashMap<WatchKey,Path>();
-        this.recursive = recursive;
-        backlog = new LinkedList<Path>();
-        
-        Properties props = new Properties();
-		try {
-			props.load(new FileInputStream(System.getProperty("user.dir") + "/../conf/FileMon.properties"));
-			String log4jProp = props.getProperty("log4j_properties");
-			PropertyConfigurator.configure(log4jProp);
-			ftp_server = props.getProperty("ftp_server");
-			ftp_username = props.getProperty("ftp_user");
-			ftp_password = props.getProperty("ftp_password");
-			fileInputFolder = props.getProperty("remote_input_dir");
-		} catch (FileNotFoundException e) {
-			System.err.println("Could not load properties file \"FileMon.properties\" from the ../conf folder");
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		if (recursive) {
-			registerAll(dir);
-		} else {
-			register(dir);
-		}
-        
-    }
+//    /**
+//     * Creates a WatchService and registers the given directory
+//     */
+//    public FileMonitor(String strDir, boolean recursive) throws IOException {
+//    	Path dir = Paths.get(strDir);
+//        this.watcher = FileSystems.getDefault().newWatchService();
+//        this.keys = new HashMap<WatchKey,Path>();
+//        this.recursive = recursive;
+//        backlog = new LinkedList<Path>();
+//        
+//        Properties props = new Properties();
+//		try {
+//			props.load(new FileInputStream(System.getProperty("user.dir") + "/../conf/FileMon.properties"));
+//			String log4jProp = props.getProperty("log4j_properties");
+//			PropertyConfigurator.configure(log4jProp);
+//			ftp_server = props.getProperty("ftp_server");
+//			ftp_username = props.getProperty("ftp_user");
+//			ftp_password = props.getProperty("ftp_password");
+//			fileInputFolder = props.getProperty("remote_input_dir");
+//		} catch (FileNotFoundException e) {
+//			System.err.println("Could not load properties file \"FileMon.properties\" from the ../conf folder");
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		
+//		if (recursive) {
+//			registerAll(dir);
+//		} else {
+//			register(dir);
+//		}
+//        
+//    }
     
-    public FileMonitor(Map<Path, MonitoredDirectory> mappings, FileSender sender) throws IOException {
-    	this.mappings = mappings;
+    /**
+     * The constructor registers directories and stores a file sender used
+     * to transfer files.
+     * @param directories		A map of monitored directories.
+     * @param sender			Some implementation of the file sender.
+     * @throws IOException
+     */
+    public FileMonitor(Map<Path, MonitoredDirectory> directories,
+    		FileSender sender) throws IOException {
+    	this.directories = directories;
     	this.sender = sender;
     	this.watcher = FileSystems.getDefault().newWatchService();
     	this.keys = new HashMap<WatchKey, Path>();
@@ -108,7 +121,7 @@ public class FileMonitor implements Runnable {
     	this.backlog = new LinkedList<Path>();
     	
     	// Register directories
-    	for (Path directory : mappings.keySet()) {
+    	for (Path directory : directories.keySet()) {
     		register(directory);
     	}
     }
@@ -202,20 +215,20 @@ public class FileMonitor implements Runnable {
 	/**
 	 * Transfers the file to a remote location.
 	 * Finds the associated remote directory and filters the file name.
-	 * @param file
+	 * @param file	The path to the transferred file.
 	 */
 	private void transferFile(Path file) {
 		try {
 			//Find dir mapping
-			MonitoredDirectory mapping = mappings.get(file.getParent());
+			MonitoredDirectory directory = directories.get(file.getParent());
 			
-			if (mapping != null) {
+			if (directory != null) {
 				
 				// Filter the file name
-				if (mapping.filter(file.getFileName().toString())) {
+				if (directory.filter(file.getFileName().toString())) {
 					
 					// Send the file
-					sender.transferFile(file, mapping.getRemoteDirectory());
+					sender.transferFile(file, directory.getRemoteDirectory());
 					
 					logger.info("File " + file.toString() +
 							" has been successfully transferred.");
@@ -233,7 +246,13 @@ public class FileMonitor implements Runnable {
 			}
 			
 		} catch (TransferFailedException e) {
-			e.printStackTrace();
+			if (e.retry()) {
+				logger.warn("Transfer failed because the file is locked for reading. Retrying later.");
+				backlog.add(file);
+			}
+			else {
+				logger.error("Transfer failed.", e);
+			}
 		}
 	}
 	

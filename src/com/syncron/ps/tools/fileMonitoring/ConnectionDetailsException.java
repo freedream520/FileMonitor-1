@@ -1,8 +1,10 @@
-package com.syncron.ps.tools;
+package com.syncron.ps.tools.fileMonitoring;
 
 /**
  * 
- * An exception thrown in case connection details cannot be read from the property file.
+ * An exception thrown in case connection details
+ * cannot be read from the property file.
+ * 
  * @author micsie
  *
  */
@@ -12,6 +14,11 @@ public class ConnectionDetailsException extends Exception {
 	
 	private String property;
 	
+	/**
+	 * The constructor sets the property that is missing
+	 * in the configuration file.
+	 * @param property	The missing property.
+	 */
 	public ConnectionDetailsException(String property) {
 		this.property = property;
 	}

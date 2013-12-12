@@ -1,4 +1,4 @@
-package com.syncron.ps.tools;
+package com.syncron.ps.tools.fileMonitoring;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -19,8 +19,14 @@ public class MonitoredDirectory {
 	 * A list of regular expressions: the files with names
 	 * matching any of those should be sent.
 	 */
-	List<String> filterMasks;
+	private List<String> filterMasks;
 	
+	/**
+	 * The constructor sets both local and remote directories, and
+	 * initializes the list of filter masks.
+	 * @param localDirectory
+	 * @param remoteDirectory
+	 */
 	public MonitoredDirectory(String localDirectory, String remoteDirectory) {
 		this.localDirectory = localDirectory;
 		this.remoteDirectory = remoteDirectory;

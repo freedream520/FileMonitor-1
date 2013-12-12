@@ -1,4 +1,4 @@
-package com.syncron.ps.tools;
+package com.syncron.ps.tools.fileMonitoring;
 
 import java.nio.file.Path;
 
@@ -16,6 +16,7 @@ public interface FileSender {
 	 * @param remoteDir		A directory on the remote server.
 	 * @throws TransferFailedException
 	 */
-	public void transferFile(Path path, String remoteDir) throws TransferFailedException;
+	public void transferFile(Path path, String remoteDir)
+			throws TransferFailedException;
 	
 }
